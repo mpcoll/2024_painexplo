@@ -1,0 +1,348 @@
+{
+    "descriptions": [
+        {
+            "datatype": "anat",
+            "suffix": "T1w",
+            "criteria": {
+                "ProtocolName": "*mprage*",
+                "SeriesDescription": "Sag_mprage_1mm_p2_ND"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r1",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-01",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R1",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r2",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-02",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R2",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r3",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-03",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R3",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r4",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-04",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R4",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r5",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-05",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R5",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r6",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-06",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R6",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r7",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-07",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R7",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r8",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-08",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R8",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r9",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-09",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R9",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "id": "id_task_painexplo_r10",
+            "datatype": "func",
+            "suffix": "bold",
+            "custom_entities": "task-painexplo_run-10",
+            "criteria": {
+                "ProtocolName": "fMRI_Pain_Explo_R10",
+                "MultibandAccelerationFactor": 3
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-01",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R1_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-02",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R2_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-03",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R3_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-04",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R4_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-05",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R5_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-06",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R6_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-07",
+            "criteria": {
+                "SeriesDescription": "fMRI_Pain_Explo_R7_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-08",
+            "criteria": {
+                "SeriesDescription": "*fMRI_Pain_Explo_R8_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-09",
+            "criteria": {
+                "SeriesDescription": "*fMRI_Pain_Explo_R9_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "func",
+            "suffix": "sbref",
+            "custom_entities": "task-painexplo_run-10",
+            "criteria": {
+                "SeriesDescription": "*fMRI_Pain_Explo_R10_SBRef",
+                "ImageComments": "Single-band reference"
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "fmap",
+            "suffix": "phasediff",
+            "criteria": {
+                "EchoTime1": 0.00492,
+                "EchoTime2": 0.00738,
+                "EchoNumber": 2,
+                "ImageType": [
+                    "ORIGINAL",
+                    "PRIMARY",
+                    "P",
+                    "DIS2D",
+                    "MFSPLIT",
+                    "PHASE"
+                ]
+            },
+            "sidecar_changes": {
+                "IntendedFor": [
+                    "id_task_painexplo_r1",
+                    "id_task_painexplo_r2",
+                    "id_task_painexplo_r3",
+                    "id_task_painexplo_r4",
+                    "id_task_painexplo_r5",
+                    "id_task_painexplo_r6",
+                    "id_task_painexplo_r7",
+                    "id_task_painexplo_r8",
+                    "id_task_painexplo_r9",
+                    "id_task_painexplo_r10"
+                ],
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "fmap",
+            "suffix": "magnitude1",
+            "criteria": {
+                "ProtocolName": "gre_field_mapping_2mm",
+                "EchoNumber": 1
+            },
+            "sidecar_changes": {
+                "IntendedFor": [
+                    "id_task_painexplo_r1",
+                    "id_task_painexplo_r2",
+                    "id_task_painexplo_r3",
+                    "id_task_painexplo_r4",
+                    "id_task_painexplo_r5",
+                    "id_task_painexplo_r6",
+                    "id_task_painexplo_r7",
+                    "id_task_painexplo_r8",
+                    "id_task_painexplo_r9",
+                    "id_task_painexplo_r10"
+                ],
+                "TaskName": "painexplo"
+            }
+        },
+        {
+            "datatype": "fmap",
+            "suffix": "magnitude2",
+            "criteria": {
+                "ProtocolName": "gre_field_mapping_2mm",
+                "EchoNumber": 2,
+                "EchoTime": 0.00738,
+                "ImageType": [
+                    "ORIGINAL",
+                    "PRIMARY",
+                    "M",
+                    "DIS2D",
+                    "MFSPLIT"
+                ]
+            },
+            "sidecar_changes": {
+                "TaskName": "painexplo",
+                "IntendedFor": [
+                    "id_task_painexplo_r1",
+                    "id_task_painexplo_r2",
+                    "id_task_painexplo_r3",
+                    "id_task_painexplo_r4",
+                    "id_task_painexplo_r5",
+                    "id_task_painexplo_r6",
+                    "id_task_painexplo_r7",
+                    "id_task_painexplo_r8",
+                    "id_task_painexplo_r9",
+                    "id_task_painexplo_r10"
+                ]
+            }
+        }
+    ]
+}
