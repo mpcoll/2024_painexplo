@@ -65,11 +65,9 @@ if not overwrite:
     # Remove already processed
     subs = [s for s in subs if not os.path.exists(opj(outpath, s + "_glm_report.html"))]
 
-
-###################################################################
-# Generate models
 ###################################################################
 # Generate first level models
+###################################################################
 
 if subs == []:
     print("All subjects already processed, running only 2nd level")

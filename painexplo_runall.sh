@@ -1,5 +1,11 @@
 # Run all analyses for the PainExplo project
 
+# Directory structure prior to running this script:
+# - root
+#   - sourcedata (raw data) (optional)
+#   - sub-xx (BIDS data) (if sourcedata is not present)
+#   - external (external data and files)
+
 # Requires:
 # - Raw data in sourcedata folder (raw data is not shared, but see the 01-painexplo_raw2bids.py script for how to convert raw data to BIDS format)
 # - BIDS data in root folder
@@ -11,7 +17,7 @@
 
 # Steps:
 
-# 1. Convert raw data to BIDS format
+# 1. Convert raw data to BIDS format (if not already done)
 # python 01-painexplo_raw2bids.py || exit 1 # exit if error
 
 # 2. Run behavioural analyses
