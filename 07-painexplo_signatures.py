@@ -57,7 +57,6 @@ signatures = {
 ###################################################################
 
 subs = [s for s in os.listdir(preppath) if "sub" in s and "html" not in s]
-subs = ["sub-009"]
 all_data = []
 for p in tqdm(subs):
 
@@ -68,7 +67,9 @@ for p in tqdm(subs):
 
     # Get main task file for each plot
     files = [
-        f for f in os.listdir(opj(basepath, p, "func")) if "events" in f and ".tsv" in f
+        f
+        for f in os.listdir(opj(basepath, p, "func"))
+        if "events" in f and ".tsv" in f and "._" not in f
     ]
     files.sort()
 
@@ -123,7 +124,7 @@ for p in tqdm(subs):
     for name, _ in signatures.items():
 
         for type in ["rating", "pain", "cues"]:
-            data_corr = data[data["vif_" + type] < vif_threshold]
+            data_corr = data[data["vifs_" + type] < vif_threshold]
             data[type + "_" + name + "_cosine_rating_cor"] = spearmanr(
                 data_corr[name + "_" + type + "_cosine"], data_corr["rating"]
             )[0]

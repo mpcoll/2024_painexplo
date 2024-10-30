@@ -31,7 +31,7 @@ class global_parameters:
 
         # GLM
         self.fwhm = 6  # Smoothing kernel size in GLM
-        self.highpass = 1 / 180  # High pass filter in GLM
+        self.highpass = 1 / 100  # High pass filter in GLM
         self.confounds = [
             "trans_x",  # Friston 24 motion parameters
             "trans_y",
@@ -58,7 +58,7 @@ class global_parameters:
             "rot_y_derivative1_power2",
             "rot_z_derivative1_power2",
             "csf",  # CSF signal
-            "motion_outliers",  # Motion outliers
+            "motion_outliers",
         ]  # Confounds to use at first level in GLM
 
 

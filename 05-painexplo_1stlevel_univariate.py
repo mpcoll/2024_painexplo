@@ -40,7 +40,6 @@ outpath = opj(param.bidspath, "derivatives/glm_model_univariate")
 if not os.path.exists(outpath):
     os.mkdir(outpath)
 
-
 # Load group mask
 group_mask = load_img(opj(param.bidspath, "derivatives/group_mask.nii.gz"))
 
@@ -53,11 +52,11 @@ subs = [s for s in os.listdir(preppath) if "sub" in s and "html" not in s]
 # Whether to run neurosynth decode
 neurosyth_decode = True
 if neurosyth_decode:
-    param.nsynth_decoder_path
     nsynth_decoder = nimare.decode.continuous.CorrelationDecoder.load(
         param.nsynth_decoder_path
     )
-    nsynth_decoder.n_cores = 0
+    # Adjust number of cores
+    nsynth_decoder.n_cores = param.ncpus
 
 # Check if we should overwrite, if not remove already processed
 overwrite = True
@@ -145,16 +144,7 @@ for model, img, event, conf in zip(models, imgs, events, confounds):
     # Create a report with nilearn with some contrasts
     ncols = len(model.design_matrices_[0].columns)
     model.generate_report(
-        contrasts={
-            # Pad manually cause nilearn crashes when padding automatically
-            "pain_vs_cross": np.asarray([0, -1, 1, 0] + [0] * (ncols - 4)),
-            "cues_vs_cross": np.asarray([1, -1, 0, 0] + [0] * (ncols - 4)),
-            "rating_vs_cross": np.asarray([0, -1, 0, 1] + [0] * (ncols - 4)),
-            "pain": np.asarray([0, 0, 1, 0] + [0] * (ncols - 4)),
-            "cues": np.asarray([1, 0, 0, 0] + [0] * (ncols - 4)),
-            "rating": np.asarray([0, 0, 0, 1] + [0] * (ncols - 4)),
-            "cross": np.asarray([0, 1, 0, 0] + [0] * (ncols - 4)),
-        }
+        contrasts=["pain", "cues", "rating", "j1_b4trial_cross"],
     ).save_as_html(opj(outpath, "sub-" + s + "_glm_report.html"))
 
     # Create a more detailed report with nltools
@@ -212,12 +202,20 @@ for model, img, event, conf in zip(models, imgs, events, confounds):
         plt.close("all")
 
     # Perform contrasts
-    cols = dm.columns.to_list()
+    all_cols, all_len = [], []
+    for ridx, d in enumerate(model.design_matrices_):
+        all_cols += d.columns.to_list()
+        all_len.append(len(d.columns))
+
     for contrast in ["pain", "rating", "cues"]:
         # Main effect of pain, rating and cues
-        contrast_vector = np.zeros(len(cols))  # Initialize contrast vector
+        contrast_vector = np.zeros(np.sum(all_len))  # Initialize contrast vector
         # Set contrast vector to 1 for the regressor of interest
-        contrast_vector = np.where(np.asarray(cols) == contrast, 1, contrast_vector)
+        contrast_vector = np.where(np.asarray(all_cols) == contrast, 1, contrast_vector)
+
+        # Split by runs
+        contrast_vector = np.split(contrast_vector, np.cumsum(all_len)[:-1])
+
         # Compute contrast - Betas
         model.compute_contrast(contrast_vector, output_type="effect_size").to_filename(
             opj(outpath, "sub-" + s + "_" + contrast + ".nii.gz")
@@ -241,9 +239,15 @@ for model, img, event, conf in zip(models, imgs, events, confounds):
         )
 
         # Same contrasts but vs cross
+        contrast_vector = np.zeros(np.sum(all_len))  # Initialize contrast vector
+        contrast_vector = np.where(np.asarray(all_cols) == contrast, 1, contrast_vector)
+
         contrast_vector = np.where(
-            np.asarray(cols) == "j1_b4trial_cross", -1, contrast_vector
+            np.asarray(all_cols) == "j1_b4trial_cross", -1, contrast_vector
         )
+
+        # Split by runs
+        contrast_vector = np.split(contrast_vector, np.cumsum(all_len)[:-1])
 
         # Contrast
         model.compute_contrast(contrast_vector, output_type="effect_size").to_filename(
@@ -388,222 +392,3 @@ for condition in [
         0,
         outdir=opj(opj(outcond, "atlas_" + condition + "_pfwe05")),
     )
-
-
-# ##################################################################
-# # Slices plot
-# ##################################################################
-
-# # Within in CTL group
-
-# # Label size
-# labelfontsize = 7
-# titlefontsize = np.round(labelfontsize * 1.5)
-# ticksfontsize = np.round(labelfontsize * 0.8)
-# legendfontsize = np.round(labelfontsize * 0.8)
-# bgimg = opj(
-#     param.datadrive, "external/tpl-MNI152NLin2009cAsym_space-MNI_res-01_T1w_brain.nii"
-# )
-
-# # Load corrected map
-# painmapfdr = load_img(
-#     opj(outpath, "2nd__PainvsNeutral", "_PainvsNeutral_withinCTL_tvals_unc001.nii")
-# )
-# view_img(painmapfdr, bg_img=bgimg)
-# # PLot slices
-# to_plot = {"x": [5, -48, -14, -30, 45, -8], "y": [], "z": [-4, 47]}
-
-# cmap = plotting.cm.cold_hot
-# for axis, coord in to_plot.items():
-#     for c in coord:
-#         fig, ax = plt.subplots(figsize=(1.5, 1.5))
-#         disp = plot_stat_map(
-#             painmapfdr,
-#             cmap=cmap,
-#             colorbar=False,
-#             bg_img=bgimg,
-#             dim=-0.3,
-#             black_bg=False,
-#             display_mode=axis,
-#             axes=ax,
-#             vmax=8,
-#             cut_coords=(c,),
-#             alpha=1,
-#             annotate=False,
-#         )
-#         disp.annotate(size=ticksfontsize, left_right=False)
-#         fig.savefig(
-#             opj(outpath, "withinCTL_001_" + axis + str(c) + ".svg"),
-#             transparent=True,
-#             bbox_inches="tight",
-#             dpi=600,
-#         )
-
-
-# # Plot a last random one to get the colorbar
-# fig, ax = plt.subplots(figsize=(1.5, 1.5))
-# thr = np.min(np.abs(painmapfdr.get_fdata()[painmapfdr.get_fdata() != 0]))
-# disp = plot_stat_map(
-#     painmapfdr,
-#     cmap=cmap,
-#     colorbar=True,
-#     bg_img=bgimg,
-#     dim=-0.3,
-#     black_bg=False,
-#     symmetric_cbar=True,
-#     display_mode="x",
-#     threshold=thr,
-#     axes=ax,
-#     vmax=8,
-#     cut_coords=(-30,),
-#     alpha=1,
-#     annotate=False,
-# )
-# disp.annotate(size=ticksfontsize, left_right=False)
-# disp._colorbar_ax.set_ylabel("T value", rotation=90, fontsize=labelfontsize, labelpad=5)
-# # lab = disp._colorbar_ax.get_yticklabels()
-# # disp._colorbar_ax.set_yticklabels(lab, fontsize=ticksfontsize)
-# disp._colorbar_ax.yaxis.set_tick_params(pad=-0.5)
-
-# fig.savefig(
-#     opj(outpath, "withinCTL_001_slicescbar.svg"),
-#     dpi=600,
-#     bbox_inches="tight",
-#     transparent=True,
-# )
-
-
-# # Load corrected map
-# painmapfdr = load_img(
-#     opj(outpath, "2nd__PainvsNeutral", "_PainvsNeutral_withinEXP_tvals_unc001.nii")
-# )
-# view_img(painmapfdr, bg_img=bgimg)
-# # PLot slices
-# to_plot = {"x": [-12, 41, -36, 59, -48], "y": [], "z": [3]}
-
-# cmap = plotting.cm.cold_hot
-# for axis, coord in to_plot.items():
-#     for c in coord:
-#         fig, ax = plt.subplots(figsize=(1.5, 1.5))
-#         disp = plot_stat_map(
-#             painmapfdr,
-#             cmap=cmap,
-#             colorbar=False,
-#             bg_img=bgimg,
-#             dim=-0.3,
-#             black_bg=False,
-#             display_mode=axis,
-#             axes=ax,
-#             vmax=8,
-#             cut_coords=(c,),
-#             alpha=1,
-#             annotate=False,
-#         )
-#         disp.annotate(size=ticksfontsize, left_right=False)
-#         fig.savefig(
-#             opj(outpath, "withinEXP_001_" + axis + str(c) + ".svg"),
-#             transparent=True,
-#             bbox_inches="tight",
-#             dpi=600,
-#         )
-
-
-# # Plot a last random one to get the colorbar
-# fig, ax = plt.subplots(figsize=(1.5, 1.5))
-# thr = np.min(np.abs(painmapfdr.get_fdata()[painmapfdr.get_fdata() != 0]))
-# disp = plot_stat_map(
-#     painmapfdr,
-#     cmap=cmap,
-#     colorbar=True,
-#     bg_img=bgimg,
-#     dim=-0.3,
-#     black_bg=False,
-#     symmetric_cbar=True,
-#     display_mode="x",
-#     threshold=thr,
-#     axes=ax,
-#     vmax=8,
-#     cut_coords=(0,),
-#     alpha=1,
-#     annotate=False,
-# )
-# disp.annotate(size=ticksfontsize, left_right=False)
-# disp._colorbar_ax.set_ylabel("T value", rotation=90, fontsize=labelfontsize, labelpad=5)
-# lab = disp._colorbar_ax.get_yticklabels()
-# disp._colorbar_ax.set_yticklabels(lab, fontsize=ticksfontsize)
-# disp._colorbar_ax.yaxis.set_tick_params(pad=-0.5)
-
-# fig.savefig(
-#     opj(outpath, "withinEXP_001_slicescbar.svg"),
-#     dpi=600,
-#     bbox_inches="tight",
-#     transparent=True,
-# )
-
-
-# # Load corrected map
-# painmapfdr = load_img(
-#     opj(outpath, "2nd__PainvsNeutral", "_PainvsNeutral_between_tvals_unc001.nii")
-# )
-# view_img(painmapfdr, bg_img=bgimg)
-# # PLot slices
-# to_plot = {"x": [-34, 25, 51, 39], "y": [], "z": [5, 51]}
-
-# cmap = plotting.cm.cold_hot
-# for axis, coord in to_plot.items():
-#     for c in coord:
-#         fig, ax = plt.subplots(figsize=(1.5, 1.5))
-#         disp = plot_stat_map(
-#             painmapfdr,
-#             cmap=cmap,
-#             colorbar=False,
-#             bg_img=bgimg,
-#             dim=-0.3,
-#             black_bg=False,
-#             display_mode=axis,
-#             axes=ax,
-#             vmax=8,
-#             cut_coords=(c,),
-#             alpha=1,
-#             annotate=False,
-#         )
-#         disp.annotate(size=ticksfontsize, left_right=False)
-#         fig.savefig(
-#             opj(outpath, "between_001_" + axis + str(c) + ".svg"),
-#             transparent=True,
-#             bbox_inches="tight",
-#             dpi=600,
-#         )
-
-
-# # Plot a last random one to get the colorbar
-# fig, ax = plt.subplots(figsize=(1.5, 1.5))
-# thr = np.min(np.abs(painmapfdr.get_fdata()[painmapfdr.get_fdata() != 0]))
-# disp = plot_stat_map(
-#     painmapfdr,
-#     cmap=cmap,
-#     colorbar=True,
-#     bg_img=bgimg,
-#     dim=-0.3,
-#     black_bg=False,
-#     symmetric_cbar=True,
-#     display_mode="x",
-#     threshold=thr,
-#     axes=ax,
-#     vmax=6,
-#     cut_coords=(27,),
-#     alpha=1,
-#     annotate=False,
-# )
-# disp.annotate(size=ticksfontsize, left_right=False)
-# disp._colorbar_ax.set_ylabel("T value", rotation=90, fontsize=labelfontsize, labelpad=5)
-# lab = disp._colorbar_ax.get_yticklabels()
-# disp._colorbar_ax.set_yticklabels(lab, fontsize=ticksfontsize)
-# disp._colorbar_ax.yaxis.set_tick_params(pad=-0.5)
-
-# fig.savefig(
-#     opj(outpath, "between_001_slicescbar.svg"),
-#     dpi=600,
-#     bbox_inches="tight",
-#     transparent=True,
-# )
