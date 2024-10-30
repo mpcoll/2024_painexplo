@@ -1,3 +1,8 @@
+# -*- coding:utf-8 -*-
+# @Script: 02-painexplo_behav.py
+# @Description: Makes figures and analyses for behavioural data
+# TODO : This version uses a simple TD model, add dedicated script for Bayesian model using pymc
+
 import pandas as pd
 from os.path import join as opj
 from sklearn.preprocessing import LabelEncoder

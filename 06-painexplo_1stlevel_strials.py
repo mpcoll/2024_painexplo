@@ -1,3 +1,15 @@
+# -*- coding:utf-8 -*-
+# @Script: 04-painexplo_makegroupmask.py
+# @Description: Univariate analyses. First level and second level models.
+# Models are created from BIDS data using nilearn. First level models are
+# created for each participant and some contrasts are saved with different
+# reports to inspect the model and data. Second level models are created
+# for each contrast and saved with different reports and maps.
+
+# An optional neurosynth decode is performed on the contrasts. The decoder
+# is loaded from a file created with the neurosynth_prep function in the
+# painexplo_config.py file.
+
 import nilearn as nl
 from nilearn.image import load_img
 from nilearn.glm.first_level import first_level_from_bids

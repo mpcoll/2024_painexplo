@@ -2,6 +2,7 @@
 # @Script: 01-painexplo_raw2bids.py
 # @Description: Takes raw data located in sourcedata and converts it to BIDS format
 # using dcm2bids and psychopy data
+# TODO : Add README file and participants.tsv with questionnaires
 
 import os
 from os.path import join as opj

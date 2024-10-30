@@ -1,13 +1,23 @@
+# -*- coding:utf-8 -*-
+# @Script: 03-painexplo_preprocess.py
+# @Description: Runs fmriprep and mriqc on BIDS data
+# Runs four participants at a time until all participants are processed;
+# this seems like the optimal number of participants to run at a time but
+# can be changed below.
+# MRIQC is run first at the participant level and then at the group level
+# Fmriprep is run at the participant level only
+# This script necessitates a functional docker installation with the nipreps
+# images available for mriqc and fmriprep
+
 import os
 from os.path import join as opj
-import subprocess
-import sys
-from pathlib import Path
 
 # import global parameters
 from painexplo_config import global_parameters  # noqa
 
 param = global_parameters()
+# Number of participants to run at a time
+num_part_run = 4
 
 
 def run_mriqc(param):
@@ -15,9 +25,12 @@ def run_mriqc(param):
     Run mriqc on 4 participants at a time only if html output not found.
     """
 
+    # Set paths
     outpath = opj(param.bidspath, "derivatives/mriqc")
+    # License file for freesurfer
     ls_path = opj(param.bidspath, "external/fs_license.txt")
 
+    # Get participants
     participants = [s for s in os.listdir(opj(param.bidspath)) if "sub-" in s]
 
     # IF first run make dir
@@ -25,21 +38,25 @@ def run_mriqc(param):
         os.makedirs(outpath)
         finished_participants = []
     else:
-        # Else check which participants are finished
+        # Else check which participants are finished by checking for html report files
         finished_participants = [
             s.split(".")[0] for s in os.listdir(opj(outpath)) if ".html" in s
         ]
 
+    # Participants to run
     to_run = [s for s in participants if s not in finished_participants]
 
-    # Command to run and print output
-    participants = [to_run[i : i + 4] for i in range(0, len(to_run), 4)]
+    # Create a list of lists of participants to run
+    participants = [
+        to_run[i : i + num_part_run] for i in range(0, len(to_run), num_part_run)
+    ]
     # Run four at a time
     for p in participants:
         # Dirty way to take into acount last bit of list if not a multiple of 4
 
-        print("Running fmriprep on " + " ".join(p))
+        print("Running mriqc on " + " ".join(p))
 
+        # Command to run
         command = (
             "docker run --rm -v "
             + param.bidspath
@@ -55,7 +72,8 @@ def run_mriqc(param):
             + " ".join(p)
             + " --nprocs "
             + str(param.ncpus)
-            + " --mem-gb 64"
+            + " --mem-gb "
+            + str(param.mem_gb)
             + " --no-sub",
         )
 
@@ -63,7 +81,7 @@ def run_mriqc(param):
         print(command)
         os.system(command)
 
-    # Run at the group level to get group reports
+    # After all participants are run at the group level to get group reports
     command = (
         "docker run --rm -v "
         + param.bidspath
@@ -75,7 +93,7 @@ def run_mriqc(param):
         + ls_path
         + ":/opt/freesurfer/license.txt "
         + "nipreps/mriqc:latest /data /out group "
-        "--nprocs " + str(param.ncpus) + " --mem-gb 64" + " --no-sub",
+        "--nprocs " + str(param.ncpus) + " --mem-gb " + str(param.mem_gb) + " --no-sub",
     )
 
 
@@ -101,12 +119,12 @@ def run_fmriprep(param):
     to_run = [s for s in participants if s not in finished_participants]
     # Command to run and print output
 
-    participants = [to_run[i : i + 4] for i in range(0, len(to_run), 4)]
+    participants = [
+        to_run[i : i + num_part_run] for i in range(0, len(to_run), num_part_run)
+    ]
 
     # Run four at a time
     for p in participants:
-        # Dirty way to take into acount last bit of list if not a multiple of 4
-
         print("Running fmriprep on " + " ".join(p))
 
         command = (
@@ -120,8 +138,8 @@ def run_fmriprep(param):
             + ls_path
             + ":/opt/freesurfer/license.txt "
             + "nipreps/fmriprep:latest /data /out participant "
-            "--participant-label "
-            + " ".join(p)
+            "--participant-label " + " ".join(p)
+            # Output space is in MNI152NLin2009cAsym with 2mm resolution
             + " --output-spaces MNI152NLin2009cAsym:res-2 --fs-no-reconall --skip-bids-validation"
         )
 
@@ -131,4 +149,4 @@ def run_fmriprep(param):
 
 
 run_fmriprep(param)
-# run_mriqc(param)
+run_mriqc(param)

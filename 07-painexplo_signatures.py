@@ -1,3 +1,10 @@
+# -*- coding:utf-8 -*-
+# @Script: 03-painexplo_preprocess.py
+# @Description: Apply brain signatures to single trial data and average images
+# and create some plots to assess pattern expression of each signature in the data
+
+# TODO: Improve plots
+
 from nilearn.image import load_img, resample_to_img
 import os
 from os.path import join as opj
@@ -6,32 +13,17 @@ import pandas as pd
 from nilearn.masking import apply_mask
 
 from tqdm.notebook import tqdm
-
 import seaborn as sns
 from scipy.spatial.distance import cosine
 from scipy.stats import zscore, pearsonr, spearmanr
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt
+from painexplo_config import global_parameters, pattern_expression_nocv
 
 ###################################################################
 # Paths
 ###################################################################
-
-# TODO
-# Get distribution of correlations for different signatures across participants for each participant
-# for both pain and rating, cues and
-
-# import global parameters
-from pathlib import Path
-import sys
-
-sys.path.append(str(Path(__file__).parents[1]))
-from painexplo_config import global_parameters  # noqa
-
+# Get global parameters
 param = global_parameters()
-vif_threshold = 4
-
 basepath = opj(param.bidspath)
 wager_maps_path = opj(param.bidspath, "external/wager_maps")
 preppath = opj(param.bidspath, "derivatives/fmriprep")
@@ -39,6 +31,11 @@ fig_path = opj(param.bidspath, "derivatives/figures")
 if not os.path.exists(fig_path):
     os.makedirs(fig_path)
 
+###################################################################
+# Parameters
+###################################################################
+# VIF thresold to exclude high multicollinearity trials
+vif_threshold = 4
 
 # Analysis mask
 group_mask = load_img(opj(basepath, "derivatives/group_mask.nii.gz"))
@@ -53,31 +50,6 @@ signatures = {
         wager_maps_path, "2015_Chang_PLoSBiology_PINES/Rating_Weights_LOSO_2.nii"
     ),
 }
-
-
-# Helper function to get pattern expression
-def pattern_expression_nocv(dat, pattern, stats, name):
-    """Calculate similarity between maps using dot product and cosine product.
-       Non-crossvalidated - to use with external data/patterns.
-
-    Args:
-        dat ([array]): images to calculate similarity on (array of shape n images x n voxels)
-        pattern ([array]): Pattern weights
-        stats ([pd df]): Data frame with subejct id and fods for each in columns
-        name ([string]): Name to add to ouput columns
-    Returns:
-        [df]: stats df with dot and cosine columns added
-    """
-    pexpress = np.zeros(dat.shape[0]) + 9999
-    cosim = np.zeros(dat.shape[0]) + 9999
-
-    for xx in range(dat.shape[0]):
-        pexpress[xx] = np.dot(dat[xx, pattern != 0], pattern[pattern != 0])
-        cosim[xx] = 1 - cosine(dat[xx, pattern != 0], pattern[pattern != 0])
-    stats[name + "_dot"] = pexpress
-    stats[name + "_cosine"] = cosim
-
-    return stats
 
 
 ###################################################################
@@ -100,6 +72,7 @@ for p in tqdm(subs):
     ]
     files.sort()
 
+    # Create single dataframe from 10 runs
     data = []
     for f in files:
         data.append(pd.read_csv(opj(basepath, p, "func", f), sep="\t"))
@@ -107,61 +80,30 @@ for p in tqdm(subs):
     # BIDS files have multiple events per trial, keep only one row per trial
     data = data[data["trial_type"] == "cues"]
 
-    # # Get images for pain
-    strials_img = [
-        opj(basepath, "derivatives", "glm_strials_rating", f)
-        for f in os.listdir(opj(basepath, "derivatives", "glm_strials_rating"))
-        if f.endswith("_t.nii.gz") and p in f
-    ]
-    strials_img.sort()
-    data["imgpatht_rating"] = strials_img
+    # # Get images for pain, rating and cues
+    X_data = dict()
+    for idx, type in enumerate(["pain", "rating", "cues"]):
+        X_data[type] = []
+        img = [
+            opj(basepath, "derivatives", "glm_strials_" + type, f)
+            for f in os.listdir(opj(basepath, "derivatives", "glm_strials_" + type))
+            if f.endswith("_t.nii.gz") and p in f
+        ]
+        # Sort images
+        img.sort()
+        # Add to data
+        data["imgpath_" + type] = img
+        # Get VIFs
+        data["vifs_" + type] = pd.read_csv(
+            opj(basepath, "derivatives", "glm_strials_" + type, p + "_vifs.csv")
+        )["vif"]
 
-    strials_img = [
-        opj(basepath, "derivatives", "glm_strials_pain", f)
-        for f in os.listdir(opj(basepath, "derivatives", "glm_strials_pain"))
-        if f.endswith("_t.nii.gz") and p in f
-    ]
-    strials_img.sort()
-    data["imgpatht_pain"] = strials_img
-
-    strials_img = [
-        opj(basepath, "derivatives", "glm_strials_cues", f)
-        for f in os.listdir(opj(basepath, "derivatives", "glm_strials_cues"))
-        if f.endswith("_t.nii.gz") and p in f
-    ]
-    strials_img.sort()
-    data["imgpatht_cues"] = strials_img
-
-    vifs_pain = pd.read_csv(
-        opj(basepath, "derivatives", "glm_strials_pain", p + "_vifs.csv")
-    )
-    data["vifs_pain"] = vifs_pain["vif"]
-
-    vifs_rating = pd.read_csv(
-        opj(basepath, "derivatives", "glm_strials_rating", p + "_vifs.csv")
-    )
-    data["vifs_rating"] = vifs_pain["vif"]
-
-    vifs_cues = pd.read_csv(
-        opj(basepath, "derivatives", "glm_strials_cues", p + "_vifs.csv")
-    )
-    data["vifs_cues"] = vifs_pain["vif"]
-
-    # Brain Data
-    X_rating = []
-    X_rating += [apply_mask(fname, group_mask) for fname in data["imgpatht_rating"]]
-    X_rating = np.squeeze(np.stack(X_rating))
-    X_rating = X_rating.astype(np.float32)
-
-    X_pain = []
-    X_pain += [apply_mask(fname, group_mask) for fname in data["imgpatht_pain"]]
-    X_pain = np.squeeze(np.stack(X_pain))
-    X_pain = X_pain.astype(np.float32)
-
-    X_cues = []
-    X_cues += [apply_mask(fname, group_mask) for fname in data["imgpatht_cues"]]
-    X_cues = np.squeeze(np.stack(X_cues))
-    X_cues = X_cues.astype(np.float32)
+        # Load images in a numpy array
+        X_data[type] += [
+            apply_mask(fname, group_mask) for fname in data["imgpath_" + type]
+        ]
+        X_data[type] = np.squeeze(np.stack(X_data[type]))
+        X_data[type] = X_data[type].astype(np.float32)
 
     for name, path in signatures.items():
 
@@ -171,11 +113,13 @@ for p in tqdm(subs):
             group_mask,
         )
         # Apply to data
-        data = pattern_expression_nocv(X_rating, pattern, data, name + "_rating")
-        data = pattern_expression_nocv(X_pain, pattern, data, name + "_pain")
-        data = pattern_expression_nocv(X_cues, pattern, data, name + "_cues")
+        data = pattern_expression_nocv(
+            X_data["rating"], pattern, data, name + "_rating"
+        )
+        data = pattern_expression_nocv(X_data["pain"], pattern, data, name + "_pain")
+        data = pattern_expression_nocv(X_data["cues"], pattern, data, name + "_cues")
 
-    # Add correaltions with pattern expression
+    # Add correaltions between temp/rating with pattern expression
     for name, _ in signatures.items():
 
         for type in ["rating", "pain", "cues"]:
@@ -186,7 +130,7 @@ for p in tqdm(subs):
             data[type + "_" + name + "_cosine_temp_cor"] = spearmanr(
                 data_corr[name + "_" + type + "_cosine"], data_corr["stim_intensite"]
             )[0]
-
+    # Append to all data
     all_data.append(data)
 
 # Concatenate all data
@@ -199,6 +143,7 @@ all_data_df = (
     all_data_df.groupby("participant_id").mean(numeric_only=True).reset_index()
 )
 
+# Columns to keep
 cols = []
 for type in ["rating", "pain", "cues"]:
     for name, _ in signatures.items():
@@ -209,12 +154,11 @@ other_cols = []
 for type in ["rating", "pain", "cues"]:
     for name, _ in signatures.items():
         other_cols.append(name + "_" + type + "_cosine")
-
+# Save
 all_data_df = all_data_df[["participant_id"] + other_cols + cols]
-
 all_data_df.to_csv(opj(basepath, "derivatives", "signatures_corr_df.csv"))
 
-
+# Plot
 df_plot = all_data_df.melt(id_vars="participant_id", value_vars=cols)
 
 
@@ -251,7 +195,7 @@ plt.savefig(
 ###################################################################
 # Apply signatures to average image
 ###################################################################
-
+# Get all univariate images
 univariate_path = opj(basepath, "derivatives", "glm_model_univariate")
 files = [f for f in os.listdir(univariate_path) if "t.nii.gz" in f and ".nii.gz" in f]
 subs, phases, img_path = [], [], []
@@ -259,14 +203,15 @@ for f in tqdm(files):
     subs.append(f.split("_")[0])
     phases.append(f.split("_")[1])
     img_path.append(opj(univariate_path, f))
-
+# Create data frame
 data = pd.DataFrame({"participant_id": subs, "phase": phases, "imgpath": img_path})
-
+# Load images
 X = []
 X += [apply_mask(fname, group_mask) for fname in tqdm(data["imgpath"])]
 X = np.squeeze(np.stack(X))
 X = X.astype(np.float32)
 
+# Apply signatures
 for name, path in signatures.items():
 
     # Load signature, resample to mask, apply mask
