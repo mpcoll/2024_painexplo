@@ -41,39 +41,6 @@ group_mask = load_img(opj(param.bidspath, "derivatives/group_mask.nii.gz"))
 space = "MNI152NLin2009cAsym"
 
 
-# Confounds to use
-confounds_use = [
-    "trans_x",
-    "trans_y",
-    "trans_z",
-    "rot_x",
-    "rot_y",
-    "rot_z",
-    "trans_x_derivative1",
-    "trans_y_derivative1",
-    "trans_z_derivative1",
-    "trans_x_power2",
-    "trans_y_power2",
-    "trans_z_power2",
-    "trans_x_derivative1_power2",
-    "trans_y_derivative1_power2",
-    "trans_z_derivative1_power2",
-    "rot_x_derivative1",
-    "rot_y_derivative1",
-    "rot_z_derivative1",
-    "rot_x_power2",
-    "rot_y_power2",
-    "rot_z_power2",
-    "rot_x_derivative1_power2",
-    "rot_y_derivative1_power2",
-    "rot_z_derivative1_power2",
-    "a_comp_cor_00",
-    "a_comp_cor_01",
-    "a_comp_cor_02",
-    "a_comp_cor_03",
-    "a_comp_cor_04",
-]
-
 # Events to model as single trials (Least square all single trials)
 strials_events = ["pain", "rating", "cues"]
 
@@ -115,7 +82,7 @@ for strials_event in strials_events:
             task_label="painexplo",  # Task
             space_label=space,  # Space
             img_filters=[("desc", "preproc")],  # Use preprocessed images
-            high_pass=1 / 128,  # High pass filter
+            high_pass=param.highpass,  # High pass filter
             mask_img=group_mask,  # Mask
             slice_time_ref=0.46327683615819204,  # Slice time reference
             hrf_model="glover",  # Use default hrf
@@ -124,13 +91,6 @@ for strials_event in strials_events:
             derivatives_folder=preppath,  # Path to derivatives
             sub_labels=subs,  # Parts to process
         )
-
-    # List to keep metadata from all participants
-    # metadata_new = []
-    # if os.path.exists(opj(outpath, "metadata.csv")):
-    #     metadata = pd.read_csv(opj(outpath, "metadata.csv"))
-    # else:
-    #     metadata = pd.DataFrame()
 
     # Events in events file to not model
     do_not_model = [
@@ -160,7 +120,7 @@ for strials_event in strials_events:
         for ev, cf in zip(event, conf):
 
             # Select confounds from confounds file
-            conf_in = cf[confounds_use]
+            conf_in = cf[param.confounds]
 
             # Replace nan for first scan
             conf_out.append(conf_in.fillna(0))
@@ -189,16 +149,12 @@ for strials_event in strials_events:
                     count += 1
             # Append to all events
             events_out.append(ev)
-            # Append to all framewise displacement
-            fwd_sub.append(np.nanmean(cf["framewise_displacement"]))
+
             # Update run count
             run_count += 1
 
         # Total trials (if some participants have less trials)
         total_trials = int(len(pd.concat(events_out)) / 3)
-
-        # Save mean framewise displacement
-        fwd_all.loc[s] = np.mean(fwd_sub)
 
         # Fit model on all runs
         model.fit(img, events_out, conf_out)
@@ -238,14 +194,14 @@ for strials_event in strials_events:
 
             # Plot design matrix
             fig, ax = plt.subplots(figsize=(10, 15))
-            sns.heatmap(dm, ax=ax, cbar=False, cmap="binary")
+            sns.heatmap(dm, ax=ax, cbar=False, cmap="viridis")
             report.add_figure(
                 fig, title="First Level Design Matrix for run " + str(ridx + 1)
             )
 
             # Plot correlation matrix between regressors
             fig, ax = plt.subplots(figsize=(10, 15))
-            sns.heatmap(dm.corr(), vmin=-1, vmax=1, cmap="RdBu_r")
+            sns.heatmap(dm.corr(), vmin=-1, vmax=1, cmap="viridis")
             report.add_figure(
                 fig, title="Events regressor correlation for run" + str(ridx + 1)
             )
@@ -312,26 +268,3 @@ for strials_event in strials_events:
         vifs["file"] = contrast_file
         # Save VIFs
         vifs.reset_index(drop=True).to_csv(opj(outpath, "sub-" + s + "_vifs.csv"))
-
-        # Save metadata for this part
-        # events_out_sub = pd.concat(events_out)
-        # events_out_sub = events_out_sub[
-        #     events_out_sub["trial_type"].str.contains(strials_event)
-        # ]
-        # events_out_sub["subject_id"] = s
-        # events_out_sub["contrast_file_z"] = contrast_file
-        # events_out_sub["contrast_file_t"] = [
-        #     s.replace("_z.nii.gz", "_t.nii.gz") for s in contrast_file
-        # ]
-        # events_out_sub["contrast_file_beta"] = [
-        #     s.replace("_z.nii.gz", ".nii.gz") for s in contrast_file
-        # ]
-
-        # Append to metadata
-        # metadata_new.append(events_out_sub)
-
-    # Save metadata and mean framewise displacement for all participants
-    # metadata_new = pd.concat(metadata_new)
-    # metadata = pd.concat([metadata, metadata_new])
-    # metadata.to_csv(opj(outpath, "metadata.csv"))
-    # fwd_all.to_csv(opj(outpath, "mean_fwd.csv"))

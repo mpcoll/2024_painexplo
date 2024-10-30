@@ -58,6 +58,7 @@ class global_parameters:
             "rot_y_derivative1_power2",
             "rot_z_derivative1_power2",
             "csf",  # CSF signal
+            "motion_outliers",  # Motion outliers
         ]  # Confounds to use at first level in GLM
 
 

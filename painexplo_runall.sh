@@ -12,14 +12,14 @@
 # Steps:
 
 # 1. Convert raw data to BIDS format
-python 01-painexplo_raw2bids.py || exit 1 # exit if error
+# python 01-painexplo_raw2bids.py || exit 1 # exit if error
 
 # 2. Run behavioural analyses
-python 02-painexplo_behav.py || exit 1 # exit if error
+# python 02-painexplo_behav.py || exit 1 # exit if error
 
 # 2. Run fmriprep mriqc on BIDS data and make groupmask
-python 03-painexplo_preprocess || exit 1 # exit if error
-python 04-painexplo_makegroupmask.py || exit 1 # exit if error
+# python 03-painexplo_preprocess || exit 1 # exit if error
+# python 04-painexplo_makegroupmask.py || exit 1 # exit if error
 
 # 3. Run GLMs
 python 05-painexplo_1stlevel_univariate.py || exit 1 # exit if error

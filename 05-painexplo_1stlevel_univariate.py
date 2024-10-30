@@ -60,7 +60,7 @@ if neurosyth_decode:
     nsynth_decoder.n_cores = 0
 
 # Check if we should overwrite, if not remove already processed
-overwrite = False
+overwrite = True
 if not overwrite:
     # Remove already processed
     subs = [s for s in subs if not os.path.exists(opj(outpath, s + "_glm_report.html"))]
@@ -115,8 +115,16 @@ for model, img, event, conf in zip(models, imgs, events, confounds):
     conf_out, events_out, fwd_sub = [], [], []
     for ev, cf in zip(event, conf):
 
+        if "motion_outliers" in param.confounds:
+            # Remove generic motion outliers and add real ones
+            confounds = list(param.confounds[:-1]) + list(
+                cf.columns[cf.columns.str.contains("motion_outlier")]
+            )
+        else:
+            confounds = param.confounds
+
         # Select confounds from confounds file
-        conf_in = cf[param.confounds]
+        conf_in = cf[confounds]
         # Replace nan for first scan
         conf_out.append(conf_in.fillna(0))
 
@@ -180,14 +188,14 @@ for model, img, event, conf in zip(models, imgs, events, confounds):
         dm = dm.apply(zscore)
         # Plot design matrix
         fig, ax = plt.subplots(figsize=(10, 15))
-        sns.heatmap(dm, ax=ax, cbar=False, cmap="binary")
+        sns.heatmap(dm, ax=ax, cbar=False, cmap="viridis")
         report.add_figure(
             fig, title="First Level Design Matrix for run " + str(ridx + 1)
         )
 
         # Plot correlation matrix for regressors
         fig, ax = plt.subplots(figsize=(10, 15))
-        sns.heatmap(dm.corr(), vmin=-1, vmax=1, cmap="RdBu_r", cmap="viridis")
+        sns.heatmap(dm.corr(), vmin=-1, cmap="viridis")
         report.add_figure(
             fig, title="Events regressor correlation for run" + str(ridx + 1)
         )
