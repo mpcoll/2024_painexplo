@@ -29,7 +29,7 @@ urllib.request.urlretrieve(
     "https://github.com/gbif/analytics/raw/master/fonts/Arial%20Narrow.ttf",
     opj(param.bidspath, "external", "arialnarrow.ttf"),
 )
-fm.fontManager.addfont("arialnarrow.ttf")
+fm.fontManager.addfont(opj(param.bidspath, "external", "arialnarrow.ttf"))
 matplotlib.rc("font", family="Arial Narrow")
 
 # Define path to data

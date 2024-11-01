@@ -149,4 +149,4 @@ def run_fmriprep(param):
 
 
 run_fmriprep(param)
-run_mriqc(param)
+# run_mriqc(param)

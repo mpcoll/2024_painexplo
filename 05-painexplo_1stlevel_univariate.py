@@ -36,7 +36,7 @@ param = global_parameters()
 # Paths
 basepath = opj(param.bidspath)
 preppath = opj(param.bidspath, "derivatives/fmriprep")
-outpath = opj(param.bidspath, "derivatives/glm_model_univariate")
+outpath = opj(param.bidspath, "derivatives/glm_model_univariate_motion_100")
 if not os.path.exists(outpath):
     os.mkdir(outpath)
 
